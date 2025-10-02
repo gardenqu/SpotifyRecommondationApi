@@ -68,24 +68,17 @@ def recommend_similar_songs(track_name, artist_name, df, top_n=5):
 
 
 # Flask route for recommendation API
-@app.route('/recommend_similar', methods=['POST'])
-def recommend_similar():
-    data = request.get_json()
+@app.route('/song_list', methods=['GET'])
+def getSongList():
+    songlist = dataFrame['track_name'].dropna().unique().tolist()
 
-    track_name = data.get('track_name')
-    artist_name = data.get('artist_name')
-    top_n = data.get('top_n', 5)
+    return jsonify({'songs': songlist})
 
-    if not track_name or not artist_name:
-        return jsonify({'error': 'track_name and artist_name are required'}), 400
+@app.route('/artist_list', methods=['GET'])
+def getArtistList():
+    songlist = dataFrame['artist_name'].dropna().unique().tolist()
 
-    recommendations_df = recommend_similar_songs(track_name, artist_name, dataFrame, top_n)
-    
-    if recommendations_df is None:
-        return jsonify({'error': 'Song not found.'}), 404
-
-    recommendations = recommendations_df.to_dict(orient='records')
-    return jsonify({'recommendations': recommendations})
+    return jsonify({'songs': songlist})
 
 
 
@@ -93,8 +86,8 @@ def recommend_similar():
 def recommend():
     try:
         data = request.get_json()
-        track_name = data.get("trackName")      # ✅ matches Android key
-        artist_name = data.get("trackArtist")   # ✅ matches Android key
+        track_name = data.get("trackName")     
+        artist_name = data.get("trackArtist")  
 
         print(f"Received: {track_name} by {artist_name}")
 
