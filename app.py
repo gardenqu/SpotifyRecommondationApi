@@ -91,30 +91,36 @@ def recommend_similar():
 
 @app.route('/recommend', methods=['POST'])
 def recommend():
-    data = request.get_json()
-    track_name = data['track_name']
-    artist_name = data['artist_name']
+    try:
+        data = request.get_json()
+        track_name = data.get("trackName")      # ✅ matches Android key
+        artist_name = data.get("trackArtist")   # ✅ matches Android key
 
-    
-   
+        print(f"Received: {track_name} by {artist_name}")
 
-    query_vector = get_song_vector(track_name, artist_name, dataFrame)
-    if query_vector is None:
-        return jsonify({'error': 'Song not found'}), 404
+        if not track_name or not artist_name:
+            return jsonify({'error': 'Missing trackName or trackArtist'}), 400
 
-    candidate_vectors = dataFrame[numeric_features].values
-    similarity_scores = cosine_similarity(query_vector, candidate_vectors)[0]
+        query_vector = get_song_vector(track_name, artist_name, dataFrame)
+        if query_vector is None:
+            return jsonify({'error': 'Song not found'}), 404
 
-    print(type(similarity_scores)) 
+        candidate_vectors = dataFrame[numeric_features].values
+        similarity_scores = cosine_similarity(query_vector, candidate_vectors)[0]
 
-    
-    dataFrame['similarity_score'] = similarity_scores
-    recommendations = dataFrame[dataFrame['track_name'] != track_name]
-    results = recommendations.sort_values(by='similarity_score', ascending=False).head(5)[
-        ['track_name', 'artist_name', 'similarity_score', 'track_url', 'artwork_url']
-    ]
-    return jsonify(results.to_dict(orient='records'))
+        print(f"Similarity scores type: {type(similarity_scores)}")
 
+        dataFrame['similarity_score'] = similarity_scores
+        recommendations = dataFrame[dataFrame['track_name'] != track_name]
+        results = recommendations.sort_values(by='similarity_score', ascending=False).head(5)[
+            ['track_name', 'artist_name', 'similarity_score', 'track_url', 'artwork_url']
+        ]
+
+        return jsonify(results.to_dict(orient='records'))
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
