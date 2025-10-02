@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: spotify-recommender
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: DEBUG
+        value: "true"
+    region: oregon
+    plan: free
